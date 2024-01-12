@@ -210,14 +210,20 @@ class TextGen(LLM):
             result = combined_text_output
 
         else:
-            url = f"{self.model_url}/api/v1/generate"
+            url = f"{self.model_url}/v1/completions"
             params = self._get_parameters(stop)
             request = params.copy()
             request["prompt"] = prompt
             response = requests.post(url, json=request)
 
             if response.status_code == 200:
-                result = response.json()["results"][0]["text"]
+                json_response = response.json()
+                if (
+                    "choices" in json_response
+                    and len(json_response["choices"]) > 0
+                    and "text" in json_response["choices"][0]
+                ):
+                    result = json_response["choices"][0]["text"]
             else:
                 print(f"ERROR: response: {response}")
                 result = ""
